@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/*
+  SecureNode IT — sistema visual
+  Tema oscuro bloqueado: negro dominante con acento rojo.
+  Tipografía: Space Grotesk (display) + Inter (texto).
+*/
+
+@theme inline {
+  /* Superficies (negro dominante) */
+  --color-ink: #060608;
+  --color-base: #0a0a0d;
+  --color-surface: #101014;
+  --color-surface-2: #16161d;
+  --color-line: #23232c;
+  --color-line-soft: #1a1a21;
+
+  /* Texto */
+  --color-fg: #f4f4f6;
+  --color-muted: #9a9aa6;
+  --color-faint: #6b6b76;
+
+  /* Acento rojo (identidad de marca) */
+  --color-accent: #ef2b3d;
+  --color-accent-soft: #ff5163;
+  --color-accent-deep: #b00d1a;
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+}
+
+:root {
+  color-scheme: dark;
+  --background: var(--color-base);
+  --foreground: var(--color-fg);
+}
+
+html {
+  background: var(--color-base);
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Selección con tinte de marca */
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 40%, transparent);
+  color: #fff;
+}
+
+/* Foco accesible visible */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent-soft);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Utilidades de marca ---- */
+
+/* Rejilla tipo circuito para fondos de sección */
+.circuit-grid {
+  background-image:
+    linear-gradient(to right, var(--color-line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line-soft) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+}
+
+/* Resplandor rojo discreto */
+.glow-accent {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-accent) 30%, transparent),
+    0 12px 48px -12px color-mix(in oklab, var(--color-accent) 55%, transparent);
+}
+
+.text-glow {
+  text-shadow: 0 0 24px color-mix(in oklab, var(--color-accent) 45%, transparent);
+}
+
+/* Halo radial suave para héroes */
+.radial-accent {
+  background: radial-gradient(
+    60% 50% at 50% -10%,
+    color-mix(in oklab, var(--color-accent) 22%, transparent),
+    transparent 70%
+  );
+}
+
+/* Línea divisoria con degradado de marca */
+.rule-accent {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-accent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,51 @@
+// SecureNode IT — esquema de datos (SQLite local)
+// Los modelos Service y Testimonial alimentan el sitio público y son
+// editables desde el panel /admin. Lead almacena los envíos del formulario
+// de contacto.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  summary     String
+  description String
+  icon        String   @default("Cube") // nombre de icono Phosphor
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  author     String
+  role       String
+  company    String
+  quote      String
+  avatarSeed String   @default("securenode")
+  order      Int      @default(0)
+  published  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  service   String?
+  message   String
+  status    String   @default("nuevo") // nuevo | contactado | cerrado
+  createdAt DateTime @default(now())
+}
