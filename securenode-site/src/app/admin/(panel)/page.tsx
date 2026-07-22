@@ -6,10 +6,12 @@ import {
   DotOutline,
   ArrowRight,
 } from "@phosphor-icons/react/dist/ssr";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Lead } from "@/lib/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 
 export const metadata = { title: "Resumen · Panel" };
+export const dynamic = "force-dynamic";
 
 function formatDate(d: Date) {
   return new Intl.DateTimeFormat("es-ES", {
@@ -21,14 +23,32 @@ function formatDate(d: Date) {
 }
 
 export default async function DashboardPage() {
-  const [leadCount, newLeadCount, serviceCount, testimonialCount, recentLeads] =
+  const supabase = createAdminClient();
+
+  const [leadCountRes, newLeadCountRes, serviceCountRes, testimonialCountRes, recentLeadsRes] =
     await Promise.all([
-      prisma.lead.count(),
-      prisma.lead.count({ where: { status: "nuevo" } }),
-      prisma.service.count(),
-      prisma.testimonial.count(),
-      prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      supabase.from("Lead").select("*", { count: "exact", head: true }),
+      supabase
+        .from("Lead")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "nuevo"),
+      supabase.from("Service").select("*", { count: "exact", head: true }),
+      supabase.from("Testimonial").select("*", { count: "exact", head: true }),
+      supabase
+        .from("Lead")
+        .select("*")
+        .order("createdAt", { ascending: false })
+        .limit(5)
+        .returns<Lead[]>(),
     ]);
+
+  if (recentLeadsRes.error) throw recentLeadsRes.error;
+
+  const leadCount = leadCountRes.count ?? 0;
+  const newLeadCount = newLeadCountRes.count ?? 0;
+  const serviceCount = serviceCountRes.count ?? 0;
+  const testimonialCount = testimonialCountRes.count ?? 0;
+  const recentLeads = recentLeadsRes.data ?? [];
 
   const stats = [
     {
@@ -122,7 +142,7 @@ export default async function DashboardPage() {
                     </span>
                   )}
                   <span className="hidden text-xs text-faint sm:block">
-                    {formatDate(lead.createdAt)}
+                    {formatDate(new Date(lead.createdAt))}
                   </span>
                 </div>
               </li>

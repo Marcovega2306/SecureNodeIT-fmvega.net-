@@ -25,14 +25,14 @@ export function LoginForm({ next }: { next: string }) {
       )}
 
       <div>
-        <label htmlFor="user" className="mb-2 block text-sm font-medium text-fg">
-          Usuario
+        <label htmlFor="email" className="mb-2 block text-sm font-medium text-fg">
+          Email
         </label>
         <input
-          id="user"
-          name="user"
-          type="text"
-          autoComplete="username"
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
           required
           className={inputClass}
         />

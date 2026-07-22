@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Indica tu nombre.").max(120),
@@ -48,18 +48,19 @@ export async function submitLead(
   }
 
   const data = parsed.data;
-  try {
-    await prisma.lead.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        company: data.company || null,
-        phone: data.phone || null,
-        service: data.service || null,
-        message: data.message,
-      },
-    });
-  } catch {
+  // Alta pública via anon client: la política RLS "Lead public insert" lo permite.
+  // Sin .select() → return=minimal, no requiere política de SELECT sobre Lead.
+  const supabase = await createClient();
+  const { error } = await supabase.from("Lead").insert({
+    name: data.name,
+    email: data.email,
+    company: data.company || null,
+    phone: data.phone || null,
+    service: data.service || null,
+    message: data.message,
+  });
+
+  if (error) {
     return {
       ok: false,
       message: "No se pudo guardar tu mensaje. Inténtalo de nuevo.",

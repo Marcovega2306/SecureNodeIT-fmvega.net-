@@ -1,5 +1,6 @@
 import { Tray } from "@phosphor-icons/react/dist/ssr";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Lead } from "@/lib/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { LeadControls } from "@/components/admin/LeadControls";
 
@@ -23,7 +24,14 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function LeadsPage() {
-  const leads = await prisma.lead.findMany({ orderBy: { createdAt: "desc" } });
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("Lead")
+    .select("*")
+    .order("createdAt", { ascending: false })
+    .returns<Lead[]>();
+  if (error) throw error;
+  const leads = data ?? [];
 
   return (
     <>
@@ -86,7 +94,7 @@ export default async function LeadsPage() {
               </p>
 
               <p className="mt-3 text-xs text-faint">
-                {formatDate(lead.createdAt)}
+                {formatDate(new Date(lead.createdAt))}
               </p>
             </article>
           ))}

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Testimonial } from "@/lib/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { TestimonialForm } from "@/components/admin/TestimonialForm";
 import { DeleteButton } from "@/components/admin/DeleteButton";
@@ -16,7 +17,13 @@ export default async function EditarTestimonioPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const testimonial = await prisma.testimonial.findUnique({ where: { id } });
+  const supabase = createAdminClient();
+  const { data: testimonial, error } = await supabase
+    .from("Testimonial")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<Testimonial>();
+  if (error) throw error;
   if (!testimonial) notFound();
 
   return (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, PencilSimple, ChatCircleText } from "@phosphor-icons/react/dist/ssr";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Testimonial } from "@/lib/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { PublishToggle } from "@/components/admin/PublishToggle";
 import { toggleTestimonialPublished } from "./actions";
@@ -9,9 +10,15 @@ export const metadata = { title: "Testimonios · Panel" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminTestimoniosPage() {
-  const testimonials = await prisma.testimonial.findMany({
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("Testimonial")
+    .select("*")
+    .order("order", { ascending: true })
+    .order("createdAt", { ascending: true })
+    .returns<Testimonial[]>();
+  if (error) throw error;
+  const testimonials = data ?? [];
 
   return (
     <>

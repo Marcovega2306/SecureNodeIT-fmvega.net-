@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 import { ICON_NAMES } from "@/components/site/ServiceIcon";
 
@@ -77,11 +77,13 @@ export async function saveService(
     return { ok: false, errors: { slug: "No se pudo generar un slug válido." } };
   }
 
+  const supabase = createAdminClient();
+
   // Comprueba unicidad del slug (excluyendo el propio registro en edición).
-  const clash = await prisma.service.findFirst({
-    where: { slug, ...(id ? { NOT: { id } } : {}) },
-    select: { id: true },
-  });
+  let clashQuery = supabase.from("Service").select("id").eq("slug", slug);
+  if (id) clashQuery = clashQuery.neq("id", id);
+  const { data: clash, error: clashError } = await clashQuery.maybeSingle();
+  if (clashError) throw clashError;
   if (clash) {
     return { ok: false, errors: { slug: "Ya existe un servicio con ese slug." } };
   }
@@ -97,9 +99,14 @@ export async function saveService(
   };
 
   if (id) {
-    await prisma.service.update({ where: { id }, data: payload });
+    const { error } = await supabase
+      .from("Service")
+      .update(payload)
+      .eq("id", id);
+    if (error) throw error;
   } else {
-    await prisma.service.create({ data: payload });
+    const { error } = await supabase.from("Service").insert(payload);
+    if (error) throw error;
   }
 
   revalidateService();
@@ -110,7 +117,9 @@ export async function deleteService(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await prisma.service.delete({ where: { id } });
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("Service").delete().eq("id", id);
+  if (error) throw error;
   revalidateService();
   redirect("/admin/servicios");
 }
@@ -120,6 +129,11 @@ export async function toggleServicePublished(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const next = formData.get("published") === "true";
   if (!id) return;
-  await prisma.service.update({ where: { id }, data: { published: next } });
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("Service")
+    .update({ published: next })
+    .eq("id", id);
+  if (error) throw error;
   revalidateService();
 }

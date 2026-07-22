@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 
 const schema = z.object({
@@ -73,10 +73,17 @@ export async function saveTestimonial(
     published: data.published,
   };
 
+  const supabase = createAdminClient();
+
   if (id) {
-    await prisma.testimonial.update({ where: { id }, data: payload });
+    const { error } = await supabase
+      .from("Testimonial")
+      .update(payload)
+      .eq("id", id);
+    if (error) throw error;
   } else {
-    await prisma.testimonial.create({ data: payload });
+    const { error } = await supabase.from("Testimonial").insert(payload);
+    if (error) throw error;
   }
 
   revalidateTestimonials();
@@ -87,7 +94,9 @@ export async function deleteTestimonial(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await prisma.testimonial.delete({ where: { id } });
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("Testimonial").delete().eq("id", id);
+  if (error) throw error;
   revalidateTestimonials();
   redirect("/admin/testimonios");
 }
@@ -97,6 +106,11 @@ export async function toggleTestimonialPublished(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const next = formData.get("published") === "true";
   if (!id) return;
-  await prisma.testimonial.update({ where: { id }, data: { published: next } });
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("Testimonial")
+    .update({ published: next })
+    .eq("id", id);
+  if (error) throw error;
   revalidateTestimonials();
 }

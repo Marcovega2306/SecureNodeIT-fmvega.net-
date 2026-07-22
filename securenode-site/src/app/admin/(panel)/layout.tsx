@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getAdmin } from "@/lib/auth";
 import { Sidebar } from "@/components/admin/Sidebar";
 
-// Defensa en profundidad: además del middleware, verificamos la sesión aquí.
+// Defensa en profundidad: además del proxy, verificamos el admin aquí.
 export const dynamic = "force-dynamic";
 
 export default async function PanelLayout({
@@ -10,8 +10,8 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  if (!session) redirect("/admin/login");
+  const admin = await getAdmin();
+  if (!admin) redirect("/admin/login");
 
   return (
     <div className="flex min-h-[100dvh] flex-col lg:flex-row">

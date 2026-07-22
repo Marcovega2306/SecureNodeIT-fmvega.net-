@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Service } from "@/lib/types";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ServiceForm } from "@/components/admin/ServiceForm";
 import { DeleteButton } from "@/components/admin/DeleteButton";
@@ -17,7 +18,13 @@ export default async function EditarServicioPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const service = await prisma.service.findUnique({ where: { id } });
+  const supabase = createAdminClient();
+  const { data: service, error } = await supabase
+    .from("Service")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<Service>();
+  if (error) throw error;
   if (!service) notFound();
 
   return (
